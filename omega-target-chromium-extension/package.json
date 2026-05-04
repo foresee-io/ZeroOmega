@@ -21,14 +21,18 @@
     "po2json": "^0.3.2"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "heap": "^0.2.6",
+    "isomorphic-git": "^1.27.1",
+    "omega-pac": "workspace:*",
     "omega-target": "workspace:*",
     "omega-web": "workspace:*",
-    "omega-pac": "workspace:*",
     "xhr": "^1.16.0"
   },
   "browser": {
-    "omega-target": "./omega_target_shim.js"
+    "omega-target": "./omega_target_shim.js",
+    "isomorphic-git": "./node_modules/isomorphic-git/index.umd.min.js",
+    "isomorphic-git/http/web": "./node_modules/isomorphic-git/http/web/index.umd.js"
   },
   "scripts": {
     "dev": "npm link omega-target && npm link omega-web && npm link omega-pac"

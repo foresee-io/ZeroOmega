@@ -1156,58 +1156,69 @@ class Options
             'Syncing not enabled due to conflict. Retry with force to overwrite
             local options and enable syncing.'))
       return if syncOptions == 'sync'
-      { gistId, gistToken } = args
-      @sync.init({
-        gistId, gistToken, withRemoteData: true
-      }).then( ({
-        options: remoteOptions, lastGistCommit: remoteLastGistCommit
-      }) =>
-        @_state.set({
-          'syncOptions': 'sync'
-          'gistId': gistId
-          'gistToken': gistToken
-        }).then =>
-          if syncOptions == 'conflict'
-            # Try to re-init options from sync.
-            @sync.enabled = false
-            @_watchStop?()
-            @_watchStop = null
-            @_storage.remove().then( =>
-              if remoteOptions
-                console.log('flush data')
-                @sync.flush({data: remoteOptions})
-            ).then =>
-              @sync.enabled = true
-              @init().then( =>
+      { gistId, gistToken, syncBranch, syncUsername } = args
+      initArgs = { gistId, gistToken, withRemoteData: true }
+      if syncBranch
+        initArgs.syncBranch = syncBranch
+      if syncUsername
+        initArgs.syncUsername = syncUsername
+      # Save config first so it's preserved even if init fails
+      configUpdate = {
+        'gistId': gistId
+        'gistToken': gistToken
+      }
+      if syncBranch
+        configUpdate['syncBranch'] = syncBranch
+      if syncUsername
+        configUpdate['syncUsername'] = syncUsername
+      @_state.set(configUpdate).then =>
+        @sync.init(initArgs).then( ({
+          options: remoteOptions, lastGistCommit: remoteLastGistCommit
+        }) =>
+          @_state.set({'syncOptions': 'sync'}).then =>
+            if syncOptions == 'conflict'
+              # Try to re-init options from sync.
+              @sync.enabled = false
+              @_watchStop?()
+              @_watchStop = null
+              @_storage.remove().then( =>
                 if remoteOptions
-                  if remoteOptions['-startupProfileName']
-                    console.log('apply startup')
-                    @applyProfile(remoteOptions['-startupProfileName'])
+                  console.log('flush data')
+                  @sync.flush({data: remoteOptions})
+              ).then =>
+                @sync.enabled = true
+                @init().then( =>
+                  if remoteOptions
+                    if remoteOptions['-startupProfileName']
+                      console.log('apply startup')
+                      @applyProfile(
+                        remoteOptions['-startupProfileName'])
+                  if args.useBuiltInSync
+                    @sync.toggleBuiltInSync(true)
+                  else
+                    @sync.toggleBuiltInSync(false)
+                ).then( =>
+                  @updateProfile()
+                )
+            else
+              if remoteOptions?.schemaVersion
+                @sync.flush({data: remoteOptions}).then( =>
+                  @sync.enabled = false
+                  @_state.set({'syncOptions': 'conflict'})
+                  return
+                )
+              else
+                @sync.enabled = true
+                @_syncWatchStop?()
+                @sync.requestPush(@_options)
+                @_syncWatchStop =
+                  @sync.watchAndPull(
+                    @_storage, @updateProfile.bind(this))
                 if args.useBuiltInSync
                   @sync.toggleBuiltInSync(true)
                 else
                   @sync.toggleBuiltInSync(false)
-              ).then( =>
-                @updateProfile()
-              )
-          else
-            if remoteOptions?.schemaVersion
-              @sync.flush({data: remoteOptions}).then( =>
-                @sync.enabled = false
-                @_state.set({'syncOptions': 'conflict'})
                 return
-              )
-            else
-              @sync.enabled = true
-              @_syncWatchStop?()
-              @sync.requestPush(@_options)
-              @_syncWatchStop =
-                @sync.watchAndPull(@_storage, @updateProfile.bind(this))
-              if args.useBuiltInSync
-                @sync.toggleBuiltInSync(true)
-              else
-                @sync.toggleBuiltInSync(false)
-              return
       )
 
   ###*

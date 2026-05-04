@@ -262,11 +262,22 @@ zeroBackground = (zeroStorage, opts) ->
     ], (changes, opts = {}) ->
       builtInSyncConfig = changes[BUILTINSYNCKEY]
       if builtInSyncConfig
-        {gistId, gistToken, lastGistCommit} = builtInSyncConfig
-        state.set({gistId, gistToken})
+        {gistId, gistToken, lastGistCommit,
+         syncBranch, syncUsername} = builtInSyncConfig
+        stateSetArgs = {gistId, gistToken}
+        if syncBranch
+          stateSetArgs.syncBranch = syncBranch
+        if syncUsername
+          stateSetArgs.syncUsername = syncUsername
+        state.set(stateSetArgs)
         if sync.enabled
           console.log('check gist change', lastGistCommit)
-          sync.init({gistId, gistToken})
+          initArgs = {gistId, gistToken}
+          if syncBranch
+            initArgs.syncBranch = syncBranch
+          if syncUsername
+            initArgs.syncUsername = syncUsername
+          sync.init(initArgs)
           state.get({
             'lastGistCommit': ''
           }).then((syncConfig) ->
@@ -288,12 +299,17 @@ zeroBackground = (zeroStorage, opts) ->
               state.set({
                 syncOptions: 'conflict'
               }).then( ->
-                options.setOptionsSync(true, {
+                syncArgs = {
                   gistId,
                   gistToken,
                   useBuiltInSync: true,
                   force: true
-                })
+                }
+                if syncBranch
+                  syncArgs.syncBranch = syncBranch
+                if syncUsername
+                  syncArgs.syncUsername = syncUsername
+                options.setOptionsSync(true, syncArgs)
               )
           )
   tabs = new OmegaTargetCurrent.ChromeTabs(actionForUrl)

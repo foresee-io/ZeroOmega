@@ -11,22 +11,40 @@ angular.module('omega').controller 'IoCtrl', (
     gistId = gistId[gistId.length - 1]
     return gistId
 
+  isGistUrl = (url = '') ->
+    url.indexOf('https://gist.github.com/') == 0
+
+  updateIsGistUrl = ->
+    $scope.isGistUrl = isGistUrl($scope.gistId or '')
+
+  $scope.onGistIdChange = ->
+    updateIsGistUrl()
+
   omegaTarget.state([
     'web.restoreOnlineUrl',
     'gistId',
     'gistToken',
+    'syncBranch',
+    'syncUsername',
     'lastGistSync',
     'lastGistState'
-  ]).then ([url, gistId, gistToken, lastGistSync, lastGistState]) ->
+  ]).then ([url, gistId, gistToken, syncBranch,
+            syncUsername, lastGistSync, lastGistState]) ->
     if url
       $scope.restoreOnlineUrl = url
     if gistId
       $scope.gistId = gistId
-      $scope.gistUrl = "https://gist.github.com/" + getGistId(gistId)
+      if isGistUrl(gistId)
+        $scope.gistUrl = "https://gist.github.com/" + getGistId(gistId)
     if gistToken
       $scope.gistToken = gistToken
+    if syncBranch
+      $scope.syncBranch = syncBranch
+    if syncUsername
+      $scope.syncUsername = syncUsername
     $scope.lastGistSync = new Date(lastGistSync or Date.now())
     $scope.lastGistState = lastGistState or ''
+    updateIsGistUrl()
 
   $scope.exportOptions = ->
     $rootScope.applyOptionsConfirm().then ->
@@ -89,9 +107,18 @@ angular.module('omega').controller 'IoCtrl', (
           message: 'Gist Id or Gist Token is required'
         )
         return
+      if !isGistUrl($scope.gistId) and !$scope.syncBranch
+        $rootScope.showAlert(
+          type: 'error'
+          message: 'Branch is required for Git Remote sync'
+        )
+        return
       args.gistId = $scope.gistId
       args.gistToken = $scope.gistToken
       args.useBuiltInSync = $scope.useBuiltInSync
+      if !isGistUrl($scope.gistId)
+        args.syncBranch = $scope.syncBranch
+        args.syncUsername = $scope.syncUsername
       $scope.enableOptionsSyncing = true
       omegaTarget.setOptionsSync(true, args).then( ->
         $window.location.reload()
@@ -129,10 +156,14 @@ angular.module('omega').controller 'IoCtrl', (
         message: 'Gist Id or Gist Token is required'
       )
       return
-    omegaTarget.resetOptionsSync({
+    resetArgs = {
       gistId: $scope.gistId
       gistToken: $scope.gistToken
-    }).then( ->
+    }
+    if !isGistUrl($scope.gistId)
+      resetArgs.syncBranch = $scope.syncBranch
+      resetArgs.syncUsername = $scope.syncUsername
+    omegaTarget.resetOptionsSync(resetArgs).then( ->
       $rootScope.applyOptionsConfirm().then ->
         $window.location.reload()
     ).catch((e) ->

@@ -1,4 +1,9 @@
 path = require('path')
+fs = require('fs')
+# Resolve to real paths (through symlinks) since browserify/module-deps
+# uses realpath-resolved file identifiers
+localIsoGitDir = path.join(__dirname, '..', 'node_modules', 'isomorphic-git')
+realIsoGitDir = fs.realpathSync(localIsoGitDir)
 module.exports =
   index:
     files:
@@ -11,6 +16,10 @@ module.exports =
         builtins: []
         standalone: 'index.coffee'
         debug: true
+        noParse: [
+          path.join(realIsoGitDir, 'index.umd.min.js')
+          path.join(realIsoGitDir, 'http/web/index.umd.js')
+        ]
   browser:
     files:
       'omega_target_chromium_extension.min.js': 'index.coffee'
@@ -27,6 +36,10 @@ module.exports =
       browserifyOptions:
         extensions: '.coffee'
         standalone: 'OmegaTargetChromium'
+        noParse: [
+          path.join(realIsoGitDir, 'index.umd.min.js')
+          path.join(realIsoGitDir, 'http/web/index.umd.js')
+        ]
   omega_webext_proxy_script:
     files:
       'build/js/omega_webext_proxy_script.min.js':

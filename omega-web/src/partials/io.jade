@@ -41,27 +41,50 @@ section.settings-group
   div
     form.sync-form
       div.form-group
-        label {{'Gist Id'}}
+        label(ng-if='isGistUrl') {{'Gist Id'}}
+        label(ng-if='!isGistUrl') {{'Repo URL'}}
         .input-group.width-limit
-          span.input-group-addon {{'ID'}}
-          input.form-control(type='text' ng-model='gistId' ng-readonly='syncOptions == "sync"' placeholder="Gist Id e.g. https://gist.github.com/{username}/{Gist Id}")
+          span.input-group-addon(ng-if='isGistUrl') {{'ID'}}
+          span.input-group-addon(ng-if='!isGistUrl') {{'URL'}}
+          input.form-control(type='text' ng-model='gistId' ng-readonly='syncOptions == "sync"' ng-change='onGistIdChange()' placeholder="Gist Id e.g. https://gist.github.com/{username}/{Gist Id}")
           span.glyphicon.glyphicon-remove.btn.clean-btn(ng-click='cleanInput("gistId")' ng-if='syncOptions != "sync"')
-        span.help-block
+        span.help-block(ng-if='isGistUrl')
           a(href="https://gist.github.com/" role="button" target="_blank")
             | {{'Create a secret Gist. '}}
           strong
             | {{" Note: If it's a public Gist, your options can be searched by others。"}}
+        span.help-block(ng-if='!isGistUrl')
+          | {{'HTTPS URL of the Git repository to sync with.'}}
+      div.form-group(ng-show='!isGistUrl')
+        label {{'Branch'}}
+        .input-group.width-limit
+          span.input-group-addon {{'BRANCH'}}
+          input.form-control(type='text' ng-model='syncBranch' ng-readonly='syncOptions == "sync"' placeholder="e.g. main")
+          span.glyphicon.glyphicon-remove.btn.clean-btn(ng-click='cleanInput("syncBranch")' ng-if='syncOptions != "sync"')
+        span.help-block
+          | {{'The branch to push to and pull from. Force push is used.'}}
+      div.form-group(ng-show='!isGistUrl')
+        label {{'Username'}}
+        .input-group.width-limit
+          span.input-group-addon {{'USER'}}
+          input.form-control(type='text' ng-model='syncUsername' ng-readonly='syncOptions == "sync"' placeholder="Git username for HTTPS auth")
+          span.glyphicon.glyphicon-remove.btn.clean-btn(ng-click='cleanInput("syncUsername")' ng-if='syncOptions != "sync"')
+        span.help-block
+          | {{'Username for HTTP Basic Authentication.'}}
       div.form-group
-        label {{'Gist Token'}}
+        label(ng-if='isGistUrl') {{'Gist Token'}}
+        label(ng-if='!isGistUrl') {{'Password / Token'}}
         .input-group.width-limit
           span.input-group-addon {{'TOKEN'}}
           input.form-control(type='text' ng-model='gistToken' ng-readonly='syncOptions == "sync"' placeholder="Gist Token")
           span.glyphicon.glyphicon-remove.btn.clean-btn(ng-click='cleanInput("gistToken")' ng-if='syncOptions != "sync"')
-        span.help-block
+        span.help-block(ng-if='isGistUrl')
           a(href="https://github.com/settings/tokens/new" role="button" target="_blank")
             | {{ 'Create a token that manages the Gist.' }}
             strong
               | {{ '(Gist permission is required.)'}}
+        span.help-block(ng-if='!isGistUrl')
+          | {{'Password or personal access token for HTTPS authentication.'}}
   div(ng-show='syncOptions == "pristine" || syncOptions == "disabled"')
     div.checkbox
       label
