@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "heap": "^0.2.6",
-    "omega-target": "../omega-target",
-    "omega-web": "../omega-web",
-    "omega-pac": "../omega-pac",
+    "omega-target": "workspace:*",
+    "omega-web": "workspace:*",
+    "omega-pac": "workspace:*",
     "xhr": "^1.16.0"
   },
   "browser": {

@@ -23,7 +23,7 @@
     "bluebird": "^2.3.2",
     "jsondiffpatch": "^0.1.8",
     "limiter": "^1.0.5",
-    "omega-pac": "../omega-pac"
+    "omega-pac": "workspace:*"
   },
   "browser": {
     "omega-pac": "./omega_pac_shim.js"

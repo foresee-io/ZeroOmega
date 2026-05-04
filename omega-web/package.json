@@ -18,7 +18,7 @@
     "grunt-mocha-test": "~0.11.0",
     "grunt-ng-annotate": "^0.3.2",
     "load-grunt-config": "^0.13.1",
-    "omega-pac": "../omega-pac"
+    "omega-pac": "workspace:*"
   },
   "scripts": {
     "dev": "npm link omega-pac && npm link"
